@@ -3,7 +3,7 @@ FROM nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ============================================================
-# Python
+# System packages
 # ============================================================
 
 RUN apt-get update && \
@@ -12,8 +12,26 @@ RUN apt-get update && \
         python3-pip \
         python3-venv \
         ca-certificates \
-        tini && \
+        tini \
+        ffmpeg && \
     rm -rf /var/lib/apt/lists/*
+
+# ============================================================
+# Python virtual environment
+# ============================================================
+
+ENV VIRTUAL_ENV=/opt/venv
+
+RUN python3 -m venv ${VIRTUAL_ENV}
+
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+
+# ============================================================
+# Python Runtime
+# ============================================================
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # ============================================================
 # Offline HuggingFace
@@ -23,25 +41,20 @@ ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1
 ENV HF_DATASETS_OFFLINE=1
 
-# Never attempt telemetry
 ENV DO_NOT_TRACK=1
 ENV HF_HUB_DISABLE_TELEMETRY=1
 
 # ============================================================
-# Python Runtime
+# Application
 # ============================================================
-
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
 # ============================================================
-# pip
+# Upgrade pip INSIDE venv
 # ============================================================
 
-RUN python3 -m pip install \
-    --break-system-packages \
+RUN pip install \
     --no-cache-dir \
     --upgrade \
     pip \
@@ -52,8 +65,7 @@ RUN python3 -m pip install \
 # PyTorch CUDA 12.8
 # ============================================================
 
-RUN python3 -m pip install \
-    --break-system-packages \
+RUN pip install \
     --no-cache-dir \
     torch==2.7.0 \
     torchaudio==2.7.0 \
@@ -65,8 +77,7 @@ RUN python3 -m pip install \
 
 COPY requirement.txt .
 
-RUN python3 -m pip install \
-    --break-system-packages \
+RUN pip install \
     --no-cache-dir \
     -r requirement.txt
 
@@ -76,7 +87,10 @@ RUN python3 -m pip install \
 
 COPY app ./app
 
-# Model mount point + temporary STT directory
+# ============================================================
+# Runtime directories
+# ============================================================
+
 RUN mkdir -p \
     /models/nezamisafa/whisper-persian-v4 \
     /tmp/stt
@@ -104,4 +118,4 @@ EXPOSE 8000
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
