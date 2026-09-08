@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Model
     # ---------------------------------------------------------
 
-    model_path: Path = Path(r"D:\ambaqinejad\code\python\openai-compatible-whisper-based-persian-stt\model\snapshots\b84fc89f5d8c6a08acbd0930c74010f8bb555253")
+    model_path: Path = Path(r"/models/nezamisafa/whisper-persian-v4")
 
     # ---------------------------------------------------------
     # Audio

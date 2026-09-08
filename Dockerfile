@@ -51,7 +51,7 @@ ENV HF_HUB_DISABLE_TELEMETRY=1
 WORKDIR /app
 
 # ============================================================
-# Upgrade pip INSIDE venv
+# Upgrade pip
 # ============================================================
 
 RUN pip install \
@@ -75,17 +75,11 @@ RUN pip install \
 # Python dependencies
 # ============================================================
 
-COPY requirement.txt .
+COPY requirement.txt /tmp/requirement.txt
 
 RUN pip install \
     --no-cache-dir \
-    -r requirement.txt
-
-# ============================================================
-# Application
-# ============================================================
-
-COPY app ./app
+    -r /tmp/requirement.txt
 
 # ============================================================
 # Runtime directories

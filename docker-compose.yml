@@ -10,14 +10,12 @@ services:
 
     restart: unless-stopped
 
+    working_dir: /app
+
     ports:
-      - "8000:8000"
+      - "8002:8000"
 
     environment:
-
-      # ------------------------------------------------------
-      # Offline
-      # ------------------------------------------------------
 
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
@@ -26,16 +24,11 @@ services:
       HF_HUB_DISABLE_TELEMETRY: "1"
       DO_NOT_TRACK: "1"
 
-      # ------------------------------------------------------
-      # Application
-      # ------------------------------------------------------
-
       API_KEY: ${API_KEY}
 
       MODEL_PATH: /models/nezamisafa/whisper-persian-v4
 
       DEVICE: cuda
-
       TORCH_DTYPE: float16
 
       SAMPLE_RATE: 16000
@@ -52,25 +45,21 @@ services:
 
       LOG_LEVEL: INFO
 
-      # ------------------------------------------------------
-      # CUDA
-      # ------------------------------------------------------
-
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
 
     volumes:
 
-      # IMPORTANT:
-      # Point this to the directory where the model
-      # already exists on your host.
+      # سورس کد
+      - ./app:/app/app
+
+      # مدل دانلودشده روی Host
       - ./model/snapshots/b84fc89f5d8c6a08acbd0930c74010f8bb555253:/models/nezamisafa/whisper-persian-v4:ro
 
       # Temporary files
       - tmp:/tmp/stt
 
     deploy:
-
       resources:
         reservations:
           devices:
@@ -80,15 +69,13 @@ services:
                 - gpu
 
     healthcheck:
-
       test:
         [
           "CMD",
-          "python3",
+          "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=5)"
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=60)"
         ]
-
       interval: 30s
       timeout: 10s
       retries: 5
@@ -99,7 +86,5 @@ services:
 
     init: true
 
-
 volumes:
-
   tmp:

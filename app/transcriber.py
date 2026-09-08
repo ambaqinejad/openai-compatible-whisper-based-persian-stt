@@ -262,11 +262,7 @@ class WhisperTranscriber:
 
                 device=self.device,
 
-                torch_dtype=self.dtype,
-
-                model_kwargs={
-                    "local_files_only": True,
-                },
+                torch_dtype=self.dtype
             )
 
             # ------------------------------------------------
