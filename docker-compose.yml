@@ -1,0 +1,105 @@
+services:
+
+  persian-stt:
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: persian-stt
+
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+    environment:
+
+      # ------------------------------------------------------
+      # Offline
+      # ------------------------------------------------------
+
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_DATASETS_OFFLINE: "1"
+
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      DO_NOT_TRACK: "1"
+
+      # ------------------------------------------------------
+      # Application
+      # ------------------------------------------------------
+
+      API_KEY: ${API_KEY}
+
+      MODEL_PATH: /models/nezamisafa/whisper-persian-v4
+
+      DEVICE: cuda
+
+      TORCH_DTYPE: float16
+
+      SAMPLE_RATE: 16000
+      CHANNELS: 1
+
+      CHUNK_SECONDS: 30
+      OVERLAP_SECONDS: 10
+
+      MAX_UPLOAD_SIZE_MB: 4096
+
+      UPLOAD_DIR: /tmp/stt
+
+      MAX_CONCURRENT_TRANSCRIPTIONS: 1
+
+      LOG_LEVEL: INFO
+
+      # ------------------------------------------------------
+      # CUDA
+      # ------------------------------------------------------
+
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+
+    volumes:
+
+      # IMPORTANT:
+      # Point this to the directory where the model
+      # already exists on your host.
+      - ./model/snapshots/b84fc89f5d8c6a08acbd0930c74010f8bb555253:/models/nezamisafa/whisper-persian-v4:ro
+
+      # Temporary files
+      - tmp:/tmp/stt
+
+    deploy:
+
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+
+    healthcheck:
+
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=5)"
+        ]
+
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+    security_opt:
+      - no-new-privileges:true
+
+    init: true
+
+
+volumes:
+
+  tmp:

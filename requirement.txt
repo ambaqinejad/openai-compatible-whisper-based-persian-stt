@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
+
+transformers
+accelerate
+safetensors
+
+numpy
+av
+
+psutil
