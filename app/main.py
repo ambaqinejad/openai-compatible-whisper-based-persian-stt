@@ -33,6 +33,7 @@ from .exceptions import (
 )
 from .logging_config import configure_logging
 from .transcriber import WhisperTranscriber
+from .text_corrector import TextCorrector
 
 
 settings = get_settings()
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 transcriber: WhisperTranscriber | None = None
+text_corrector: TextCorrector | None = None
 
 transcription_semaphore = asyncio.Semaphore(
     settings.max_concurrent_transcriptions
@@ -55,6 +57,7 @@ async def lifespan(
 ):
 
     global transcriber
+    global text_corrector
 
     logger.info(
         "Starting %s v%s",
@@ -72,6 +75,7 @@ async def lifespan(
         torch_dtype=settings.torch_dtype,
         sample_rate=settings.sample_rate,
     )
+    text_corrector = TextCorrector()
 
     yield
 
@@ -324,6 +328,44 @@ async def create_transcription(
             "[%s] Transcription completed",
             request_id,
         )
+
+        # ----------------------------------------------------
+        # Qwen text correction
+        # ----------------------------------------------------
+
+        if settings.qwen_correction_enabled:
+
+            logger.info(
+                "[%s] Starting Qwen text correction",
+                request_id,
+            )
+
+            try:
+
+                text = await text_corrector.correct(
+                    text
+                )
+
+            except Exception as exc:
+
+                logger.exception(
+                    "[%s] Qwen text correction failed",
+                    request_id,
+                )
+
+                raise HTTPException(
+                    status_code=500,
+                    detail="Text correction failed",
+                ) from exc
+
+            logger.info(
+                "[%s] Qwen text correction completed. "
+                "Corrected text length=%d",
+                request_id,
+                len(text),
+            )
+
+
 
         if response_format == "text":
 

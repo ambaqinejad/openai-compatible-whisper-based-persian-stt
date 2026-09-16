@@ -32,6 +32,26 @@ class Settings(BaseSettings):
     model_path: Path = Path(r"/models/nezamisafa/whisper-persian-v4")
 
     # ---------------------------------------------------------
+    # Text Correction / Qwen
+    # ---------------------------------------------------------
+
+    # OpenAI-compatible Qwen server
+    qwen_base_url: str = "http://192.168.100.10:8080/v1"
+
+    # API key required by the Qwen server.
+    # If the server does not require authentication, use any value.
+    qwen_api_key: str = "local"
+
+    # Model name exposed by the OpenAI-compatible server.
+    qwen_model: str = "qwen"
+
+    # Enable/disable post-processing with Qwen.
+    qwen_correction_enabled: bool = True
+
+    # Maximum number of tokens generated for correction.
+    qwen_max_tokens: int = 81920
+
+    # ---------------------------------------------------------
     # Audio
     # ---------------------------------------------------------
 
