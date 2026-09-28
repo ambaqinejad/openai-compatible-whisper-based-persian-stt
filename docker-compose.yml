@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
 
+    image: openai-compatible-whisper-based-persian-stt-persian-stt:latest
+
     container_name: persian-stt
 
     restart: unless-stopped
